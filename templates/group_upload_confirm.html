@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Upload{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>File {{ filename }} already exists</h2>
+    <form method="post">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        <input type="hidden" name="temp_filepath" value="{{ temp_filepath }}">
+        <input type="hidden" name="group_id" value="{{ group_id }}">
+        <button name="action" value="replace" class="btn btn-warning">Replace</button>
+        <button name="action" value="rename" class="btn btn-primary">Keep Both</button>
+    </form>
+</div>
+{% endblock %}

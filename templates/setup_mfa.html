@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Setup MFA{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Setup Multi-Factor Authentication</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-danger">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <p>Scan the QR code below with your authenticator app and enter the generated code.</p>
+        <div>
+            <img src="data:image/png;base64,{{ img_base64 }}" alt="QR Code">
+        </div>
+        <form method="post" action="/setup_mfa">
+            <div class="form-group">
+                <label for="mfa_code">Authentication code</label>
+                <input type="text" class="form-control" name="mfa_code" placeholder="Enter the code" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Confirm</button>
+        </form>
+    </div>
+{% endblock %}

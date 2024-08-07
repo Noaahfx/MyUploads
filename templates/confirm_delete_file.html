@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Confirm Delete File
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Confirm Delete File</h1>
+        <p>Are you sure you want to delete the following file?</p>
+        <ul>
+            <li>ID: {{ file.id }}</li>
+            <li>Filename: {{ file.filename }}</li>
+            <li>Path: {{ file.filepath }}</li>
+        </ul>
+        <form method="POST" action="{{ url_for('admin_delete_file', file_id=file.id) }}">
+            <button type="submit" class="btn btn-danger">Confirm</button>
+            <a href="{{ url_for('admin_files') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+{% endblock %}

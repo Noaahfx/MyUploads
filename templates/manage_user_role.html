@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Manage User Roles{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Manage User Roles</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="user_id">Select User</label>
+            <select name="user_id" id="user_id" class="form-control">
+                {% for member in group_members %}
+                <option value="{{ member.id }}">{{ member.username }} (Current Role: {{ member.role }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="role">Select New Role</label>
+            <select name="role" id="role" class="form-control">
+                <option value="group_user">Group User</option>
+                <option value="group_leader">Group Leader</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Role</button>
+    </form>
+</div>
+{% endblock %}

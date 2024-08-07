@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Confirm Delete User
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Confirm Delete User</h1>
+        <p>Are you sure you want to delete the following user?</p>
+        <ul>
+            <li>ID: {{ user.id }}</li>
+            <li>Username: {{ user.username }}</li>
+            <li>Email: {{ user.email }}</li>
+        </ul>
+        <form action="{{ url_for('delete_user') }}" method="post">
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <p>Are you sure you want to delete the user: {{ user.username }}?</p>
+            <button type="submit" name="delete" value="{{ user.id }}">Delete</button>
+            <a href="{{ url_for('admin_dashboard') }}">Cancel</a>
+        </form>
+    </div>
+{% endblock %}

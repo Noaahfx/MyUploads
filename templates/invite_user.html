@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Invite User{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Invite User to {{ group.name }}</h2>
+    {% if error_message %}
+    <div class="alert alert-danger">{{ error_message }}</div>
+    {% endif %}
+    <form method="post" action="{{ url_for('invite_user', group_id=group.id) }}">
+        <div class="form-group">
+            <label for="invitee_username">Invitee Username</label>
+            <input type="text" class="form-control" name="invitee_username" placeholder="Enter username" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Send Invitation</button>
+    </form>
+</div>
+{% endblock %}

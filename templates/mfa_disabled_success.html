@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}MFA Disabled{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">MFA Disabled Successfully</h2>
+    <p class="text-center">You have successfully disabled Multi-Factor Authentication (MFA) for your account.</p>
+    <div class="text-center">
+        <a href="{{ url_for('login') }}" class="btn btn-primary">Go to Login</a>
+    </div>
+</div>
+{% endblock %}

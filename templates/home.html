@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+     <div class="modal fade" id="sessionWarningModal" tabindex="-1" role="dialog" aria-labelledby="sessionWarningModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sessionWarningModalLabel">Session Expiring Soon</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Your session is about to expire. Would you like to extend your session?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="noLogoutBtn">No</button>
+                    <button type="button" class="btn btn-primary" id="extendSessionBtn">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h2>Welcome, {{ username }}</h2>
+    <p class="lead">This is your home page. You can upload and manage your files here.</p>
+
+    <h3 class="mt-5">Your Uploaded Files</h3>
+    <ul class="list-group">
+        {% for file in files %}
+            <li class="list-group-item">
+                {{ file.filename }}
+                <div>
+                    <a href="/view/{{ file.id }}" class="btn btn-sm btn-info" target="_blank">View</a>
+                    <a href="/download/{{ file.id }}" class="btn btn-sm btn-success">Download</a>
+                    <a href="/delete/{{ file.id }}" class="btn btn-sm btn-danger">Delete</a>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h3 class="mt-5">Group Uploaded Files</h3>
+    <ul class="list-group">
+        {% for file in group_files %}
+            <li class="list-group-item">
+                {{ file.filename }} (Group: {{ file.group_name }})
+                <div>
+                    <a href="/group_view_file/{{ file.id }}" class="btn btn-sm btn-info" target="_blank">View</a>
+                    <a href="/group_download_file/{{ file.id }}" class="btn btn-sm btn-success">Download</a>
+                    {% if file.role == 'group_leader' %}
+                        <a href="/group_delete_file/{{ file.id }}" class="btn btn-sm btn-danger">Delete</a>
+                    {% endif %}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    <script src="{{ url_for('static', filename='session_timeout.js') }}"></script>
+{% endblock %}

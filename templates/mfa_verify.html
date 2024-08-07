@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Verify MFA{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Verify Multi-Factor Authentication</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-danger">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="post" action="/mfa_verify">
+            <div class="form-group">
+                <label for="mfa_code">Authentication code</label>
+                <input type="text" class="form-control" name="mfa_code" placeholder="Enter the code from your authenticator app" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify</button>
+        </form>
+    </div>
+{% endblock %}

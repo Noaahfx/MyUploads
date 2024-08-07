@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Verify OTP</h2>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-info mt-3">{{ messages[0] }}</div>
+        {% endif %}
+    {% endwith %}
+    <form method="post" action="/verify_otp">
+        <div class="form-group">
+            <label for="otp">Enter OTP</label>
+            <input type="text" class="form-control" id="otp" name="otp" required>
+        </div>
+        <button type="submit" class="btn btn-success">Verify</button>
+    </form>
+    <form method="post" action="/resend_forgot_password_otp" class="mt-3">
+        <button type="submit" class="btn btn-primary">Resend OTP</button>
+    </form>
+</div>
+{% endblock %}

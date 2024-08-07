@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Upload{% endblock %}
+
+{% block content %}
+    <h2>File Exists</h2>
+    <p>The file <strong>{{ filename }}</strong> already exists. Do you want to replace the existing file or keep both files?</p>
+    <form method="post" action="{{ url_for('upload_confirm') }}">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        <input type="hidden" name="temp_filepath" value="{{ temp_filepath }}">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="action" id="replace" value="replace" checked>
+            <label class="form-check-label" for="replace">
+                Replace existing file
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="action" id="keep" value="keep">
+            <label class="form-check-label" for="keep">
+                Keep both files
+            </label>
+        </div>
+        <a href="/home" class="btn btn-danger mt-3">Cancel</a>
+        <button type="submit" class="btn btn-success mt-3">Upload</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Account Settings</h2>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-info mt-3">{{ messages[0] }}</div>
+        {% endif %}
+    {% endwith %}
+    <form method="post" action="/account" class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Multi-Factor Authentication</h4>
+                <p class="card-text">
+                    {% if mfa_method == 'none' %}
+                        <span class="text-danger">No Multi-Factor Authentication enabled.</span>
+                    {% elif mfa_method == 'app' %}
+                        <span class="text-success">Authenticator App is currently enabled.</span>
+                    {% elif mfa_method == 'email' %}
+                        <span class="text-success">Email-based 2FA is currently enabled.</span>
+                    {% elif mfa_method == 'sms' %}
+                        <span class="text-success">SMS-based 2FA is currently enabled.</span>
+                    {% endif %}
+                </p>
+                <div class="form-group">
+                    <label for="mfa_method">Select MFA Method</label>
+                    <select class="form-control" id="mfa_method" name="mfa_method">
+                        <option value="none" {% if mfa_method == 'none' %}selected{% endif %}>None</option>
+                        <option value="app" {% if mfa_method == 'app' %}selected{% endif %}>Authenticator App</option>
+                        <option value="email" {% if mfa_method == 'email' %}selected{% endif %}>Email</option>
+                        {% if phone_verified %}
+                            <option value="sms" {% if mfa_method == 'sms' %}selected{% endif %}>SMS</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="show_password" onclick="togglePasswordVisibility('password')">
+                        <label class="form-check-label" for="show_password">Show Password</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" name="action" value="save_mfa">Save</button>
+            </div>
+        </div>
+    </form>
+    <form method="post" action="/change_password" class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Change Password</h4>
+                <div class="form-group">
+                    <label for="current_password">Current Password</label>
+                    <input type="password" class="form-control" id="current_password" name="current_password" placeholder="Enter current password" required>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="show_current_password" onclick="togglePasswordVisibility('current_password')">
+                        <label class="form-check-label" for="show_current_password">Show Password</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Enter new password" required>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="show_new_password" onclick="togglePasswordVisibility('new_password')">
+                        <label class="form-check-label" for="show_new_password">Show Password</label>
+                    </div>
+                    <small class="form-text text-muted">New password must be at least 8 characters long, contain letters, numbers, and special characters.</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_new_password">Confirm New Password</label>
+                    <input type="password" class="form-control" id="confirm_new_password" name="confirm_new_password" placeholder="Confirm new password" required>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="show_confirm_new_password" onclick="togglePasswordVisibility('confirm_new_password')">
+                        <label class="form-check-label" for="show_confirm_new_password">Show Password</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Change Password</button>
+            </div>
+        </div>
+    </form>
+    <form method="post" action="/verify_phone" class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Phone Number Verification</h4>
+                <div class="form-group">
+                    <label for="phone_number">Phone Number</label>
+                    <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="Enter your phone number (e.g. +6598765432)" value="{% if phone_number %}{{ phone_number }}{% endif %}" required {% if phone_verified %}readonly{% endif %}>
+                </div>
+                {% if not phone_verified %}
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" class="form-control" id="password_1" name="password" placeholder="Enter your password" required>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="show_phone_password" onclick="togglePasswordVisibility('password_1')">
+                            <label class="form-check-label" for="show_phone_password">Show Password</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" name="action" value="verify_phone">Verify Phone Number</button>
+                {% else %}
+                    <span class="text-success">Phone number verified.</span>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+    {% if not phone_verified %}
+    <form method="post" action="/confirm_phone" class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Confirm Phone Number</h4>
+                <div class="form-group">
+                    <label for="verification_code">Verification Code</label>
+                    <input type="text" class="form-control" id="verification_code" name="verification_code" placeholder="Enter verification code" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Confirm Phone Number</button>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+    function togglePasswordVisibility(fieldId) {
+        var passwordField = document.getElementById(fieldId);
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+        } else {
+            passwordField.type = "password";
+        }
+    }
+</script>
+{% endblock %}

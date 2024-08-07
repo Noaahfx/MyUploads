@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Upload File to {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Upload File to {{ group.name }}</h2>
+    <form action="{{ url_for('group_upload', group_id=group.id) }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">Choose file</label>
+            <input type="file" class="form-control" id="file" name="file" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+{% endblock %}

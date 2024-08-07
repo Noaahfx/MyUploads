@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}My Groups{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>My Groups</h2>
+    <div class="mb-3">
+        <a href="{{ url_for('create_group') }}" class="btn btn-success">Create New Group</a>
+        <a href="{{ url_for('view_invitations') }}" class="btn btn-info ml-2">View Invitations</a>
+    </div>
+    <h3>Groups You Lead</h3>
+    {% if groups %}
+        <ul class="list-group">
+            {% for group in groups %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ group.name }}
+                <div>
+                    {% if group.is_active %}
+                        <a href="{{ url_for('group_upload', group_id=group.id) }}" class="btn btn-primary">Upload File</a>
+                        <form method="post" action="{{ url_for('disable_group', group_id=group.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-danger">Disable</button>
+                        </form>
+                        <form method="post" action="{{ url_for('delete_group', group_id=group.id) }}" class="d-inline ml-2">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                        <form method="get" action="{{ url_for('invite_user', group_id=group.id) }}" class="d-inline ml-2">
+                            <button type="submit" class="btn btn-primary">Invite User</button>
+                        </form>
+                        <form method="get" action="{{ url_for('manage_user_role', group_id=group.id) }}" class="d-inline ml-2">
+                            <button type="submit" class="btn btn-warning">Manage User Roles</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{{ url_for('enable_group', group_id=group.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-secondary">Enable</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You do not lead any groups.</p>
+    {% endif %}
+
+    <h3 class="mt-5">Groups You Are a Member Of</h3>
+    {% if member_groups %}
+        <ul class="list-group">
+            {% for group in member_groups %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ group.name }}
+                <div>
+                    {% if group.is_active %}
+                        <a href="{{ url_for('group_upload', group_id=group.id) }}" class="btn btn-primary">Upload File</a>
+                    {% else %}
+                        <button class="btn btn-secondary" disabled>Upload Disabled</button>
+                    {% endif %}
+                    <form method="post" action="{{ url_for('leave_group', group_id=group.id) }}" class="d-inline ml-2">
+                        <button type="submit" class="btn btn-danger">Leave Group</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You do not belong to any groups.</p>
+    {% endif %}
+</div>
+{% endblock %}

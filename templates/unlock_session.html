@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unlock Session</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Unlock Session</h2>
+        <form action="{{ url_for('unlock_session') }}" method="post">
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Unlock</button>
+        </form>
+        {% if msg %}
+        <div class="alert alert-danger mt-3">{{ msg }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>

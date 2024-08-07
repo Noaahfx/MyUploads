@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Account Verification{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Account Verification</h2>
+        <p>{{ msg }}</p>
+        <a href="{{ url_for('login') }}" class="btn btn-primary">Go to Login</a>
+    </div>
+{% endblock %}

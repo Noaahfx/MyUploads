@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Create Group{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Create Group</h2>
+    {% if error_message %}
+    <div class="alert alert-danger">{{ error_message }}</div>
+    {% endif %}
+    <form method="post" action="{{ url_for('create_group') }}">
+        <div class="form-group">
+            <label for="group_name">Group Name</label>
+            <input type="text" class="form-control" name="group_name" placeholder="Enter group name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+</div>
+{% endblock %}

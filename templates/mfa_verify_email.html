@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Email 2FA{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Verify Email 2FA</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-info">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="post" action="{{ url_for('mfa_verify_email') }}">
+            <div class="form-group">
+                <label for="mfa_code">2FA Code</label>
+                <input type="text" class="form-control" name="mfa_code" placeholder="Enter the 2FA code from your email" required>
+            </div>
+            <button type="submit" class="btn btn-success">Verify</button>
+        </form>
+        <form method="post" action="{{ url_for('mfa_verify_email') }}" class="mt-3">
+            <button type="submit" class="btn btn-primary" name="resend">Resend 2FA Code</button>
+        </form>
+    </div>
+{% endblock %}

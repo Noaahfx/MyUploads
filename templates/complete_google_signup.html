@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Signup{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Complete Signup</h2>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-info mt-3">{{ messages[0] }}</div>
+        {% endif %}
+    {% endwith %}
+    <form method="post" action="/complete_google_signup" onsubmit="return validateForm()">
+        <div class="form-group">
+            <label for="username">Choose a Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Choose a Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+            <small class="form-text text-muted">Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.</small>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+        </div>
+        <div class="form-group">
+            <input type="checkbox" onclick="togglePassword()"> Show Password
+        </div>
+        <button type="submit" class="btn btn-primary">Complete Signup</button>
+    </form>
+</div>
+
+<script>
+    function validateForm() {
+        var username = document.getElementById("username").value;
+        var password = document.getElementById("password").value;
+        var confirmPassword = document.getElementById("confirm_password").value;
+
+        if (username.length > 50) {
+            alert("Username must be 50 characters or fewer.");
+            return false;
+        }
+        return true;
+    }
+
+    function togglePassword() {
+        var passwordField = document.getElementById("password");
+        var confirmPasswordField = document.getElementById("confirm_password");
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            confirmPasswordField.type = "text";
+        } else {
+            passwordField.type = "password";
+            confirmPasswordField.type = "password";
+        }
+    }
+</script>
+{% endblock %}

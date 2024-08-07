@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Invitations{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>My Invitations</h2>
+    <ul class="list-group">
+        {% for invitation in invitations %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            You have been invited to join {{ invitation.group_name }} by {{ invitation.inviter_name }}
+            <div>
+                <form method="post" action="{{ url_for('respond_invitation', invitation_id=invitation.id, response='accept') }}" class="d-inline">
+                    <button type="submit" class="btn btn-success">Accept</button>
+                </form>
+                <form method="post" action="{{ url_for('respond_invitation', invitation_id=invitation.id, response='decline') }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Decline</button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1020,8 +1020,13 @@ def reset_password():
             return redirect(url_for('reset_password'))
 
         username = session.get('username')
+
+        # Hash the new password before saving it to the database
+        hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
+        print(f"Hashed new password: {hashed_password}")
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('UPDATE users SET password = %s WHERE username = %s', (new_password, username))
+        cursor.execute('UPDATE users SET password = %s WHERE username = %s', (hashed_password, username))
         mysql.connection.commit()
 
         flash('Password changed successfully.')

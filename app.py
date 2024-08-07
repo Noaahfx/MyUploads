@@ -23,6 +23,8 @@ from twilio.rest import Client
 from oauthlib.oauth2 import WebApplicationClient
 import json
 import MySQLdb.cursors
+from qrcode.image.pil import PilImage
+from PIL import Image
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 app = Flask(__name__)
@@ -403,13 +405,6 @@ def validate_hcaptcha(response):
     result = r.json()
     return result.get('success', False)
 
-import qrcode
-from io import BytesIO
-import base64
-import pyotp
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-import MySQLdb.cursors
-
 @app.route('/setup_mfa', methods=['GET', 'POST'])
 def setup_mfa():
     if 'username' not in session or 'mfa_secret' not in session:
@@ -440,11 +435,11 @@ def setup_mfa():
     )
     qr.add_data(otp_uri)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
+    img = qr.make_image(image_factory=PilImage)
 
     # Save the image to a BytesIO object
     buffer = BytesIO()
-    img.save(buffer, format="PNG")
+    img.save(buffer, "PNG")
     img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
     return render_template('setup_mfa.html', img_base64=img_base64)

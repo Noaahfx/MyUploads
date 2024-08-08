@@ -1,3 +1,4 @@
+import logging
 import oauthlib
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, flash, send_file
 from flask_mysqldb import MySQL
@@ -18,6 +19,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from functools import wraps
 import random
+import modules.streaming
+import cv2
 from datetime import datetime, timedelta, timezone
 from twilio.rest import Client
 from oauthlib.oauth2 import WebApplicationClient
@@ -48,6 +51,11 @@ TEMP_FOLDER = 'temp_uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['TEMP_FOLDER'] = TEMP_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB limit
+
+FACE_IMAGES_FOLDER = 'static/face_images'
+app.config['FACE_IMAGES_FOLDER'] = FACE_IMAGES_FOLDER
+os.makedirs(FACE_IMAGES_FOLDER, exist_ok=True)
+
 
 # Ensure the uploads folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -83,13 +91,15 @@ def lock_session():
     if 'loggedin' in session:
         session['locked'] = True
         log_user_action(session['username'], session['session_id'], 'Locked session')
-    return redirect(url_for('unlock_session'))
-
+        if session.get('role') == 'admin':
+            return redirect(url_for('admin_unlock_session'))
+        else:
+            return redirect(url_for('unlock_session'))
 
 @app.route('/unlock_session', methods=['GET', 'POST'])
 def unlock_session():
     msg = ''
-    if 'locked' not in session:
+    if 'locked' not in session or 'id' not in session:
         return redirect(url_for('home'))
 
     if request.method == 'POST':
@@ -98,7 +108,7 @@ def unlock_session():
         cursor.execute('SELECT * FROM users WHERE id = %s', (session['id'],))
         account = cursor.fetchone()
 
-        if account and account['password']:
+        if account and check_password_hash(account['password'], password):
             session.pop('locked', None)
             log_user_action(session['username'], session['session_id'], 'Unlocked session')
             return redirect(url_for('home'))
@@ -106,11 +116,18 @@ def unlock_session():
             msg = 'Incorrect password!'
 
     return render_template('unlock_session.html', msg=msg)
+
+
 @app.before_request
 def before_request():
     if 'loggedin' in session:
-        if 'locked' in session and request.endpoint != 'unlock_session':
-            return redirect(url_for('unlock_session'))
+        if 'locked' in session:
+            if session.get('role') == 'admin':
+                if request.endpoint not in ['admin_unlock_session', 'static']:
+                    return redirect(url_for('admin_unlock_session'))
+            else:
+                if request.endpoint not in ['unlock_session', 'static']:
+                    return redirect(url_for('unlock_session'))
 
         if 'session_id' not in session:
             session['session_id'] = hashlib.sha256(os.urandom(64)).hexdigest()
@@ -125,6 +142,9 @@ def before_request():
             return redirect(url_for('login'))
 
         log_user_action(session['username'], session['session_id'], f'Accessed {request.endpoint}')
+
+
+
 
 def generate_otp_code():
     return str(random.randint(100000, 999999))
@@ -317,6 +337,28 @@ def get_device_hash():
     device_info = request.headers.get('User-Agent', '') + request.remote_addr
     return hashlib.sha256(device_info.encode()).hexdigest()
 
+def detect_face(image_path):
+    # Load the cascade
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+    # Read the input image
+    img = cv2.imread(image_path)
+    if img is None:
+        return False
+
+    # Convert into grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Detect faces
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+    # If no faces are detected, return False
+    if len(faces) == 0:
+        return False
+
+    # Faces found
+    return True
+
 @app.route('/')
 def firstpage():
     return redirect(url_for('login'))
@@ -326,16 +368,16 @@ def firstpage():
 def register():
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form and 'confirm_password' in request.form:
-
-
         username = request.form['username']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
         email = request.form['email']
+
         hcaptcha_response = request.form.get('h-captcha-response')
         if not hcaptcha_response or not validate_hcaptcha(hcaptcha_response):
             msg = 'Captcha validation failed!'
             return render_template('register.html', msg=msg)
+
         password_requirements = (
             len(password) >= 8,
             re.search(r'[A-Z]', password),
@@ -371,15 +413,17 @@ def register():
             msg = 'Please fill out the form!'
         else:
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-            print(hashed_password)
             verification_token = generate_mfa_secret()
-            cursor.execute('INSERT INTO users (username, password, email, verification_token, email_verified) VALUES (%s, %s, %s, %s, %s)', (username, hashed_password, email, verification_token, False))
+            cursor.execute(
+                'INSERT INTO users (username, password, email, verification_token, email_verified) VALUES (%s, %s, %s, %s, %s)',
+                (username, hashed_password, email, verification_token, False))
             mysql.connection.commit()
             send_verification_email(email, verification_token)
             msg = 'You have successfully registered! Please check your email to verify your account.'
     elif request.method == 'POST':
         msg = 'Please fill out the form!'
     return render_template('register.html', msg=msg)
+
 
 @app.route('/verify/<token>')
 def verify_email(token):
@@ -482,11 +526,11 @@ def login():
                 session['role'] = account['role']
                 session['mfa_enabled'] = account['mfa_enabled']
                 session['mfa_method'] = account['mfa_method']
-
                 session['session_id'] = hashlib.sha256(os.urandom(64)).hexdigest()
                 session['regenerate_time'] = datetime.now()
 
                 log_user_action(session['username'], session['session_id'], 'Logged in')
+
                 if account['mfa_enabled']:
                     if account['mfa_method'] == 'app':
                         session['mfa_secret'] = account['mfa_secret']
@@ -518,6 +562,59 @@ def login():
         else:
             msg = 'Incorrect username/password!'
     return render_template('login.html', msg=msg)
+
+@app.route('/face_login', methods=['POST'])
+def face_login():
+    msg = ''
+    if request.method == 'POST':
+        try:
+            result = modules.streaming.analysis(
+                db_path='static/face_images',
+                model_name='VGG-Face',
+                detector_backend='opencv',
+                distance_metric='cosine',
+                enable_face_analysis=False,
+                source=0,  # This should be the index of the camera
+                time_threshold=2,
+                frame_threshold=5,
+                anti_spoofing=True
+            )
+            if result['status'] == 'success' and result['verified']:
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                cursor.execute('SELECT * FROM users WHERE face_image = %s', (result['target_label'],))
+                account = cursor.fetchone()
+                if account:
+                    session['loggedin'] = True
+                    session['id'] = account['id']
+                    session['username'] = account['username']
+                    log_action(account['username'], 'Logged in with face recognition')
+                    if account['mfa_enabled']:
+                        if account['mfa_method'] == 'app':
+                            session['mfa_secret'] = account['mfa_secret']
+                            return redirect(url_for('mfa_verify'))
+                        elif account['mfa_method'] == 'email':
+                            code = generate_2fa_code()
+                            expiration = datetime.now() + timedelta(minutes=5)
+                            cursor.execute('UPDATE users SET email_2fa_code = %s, email_2fa_expiration = %s WHERE id = %s',
+                                           (code, expiration, account['id']))
+                            mysql.connection.commit()
+                            send_2fa_email(account['email'], code)
+                            return redirect(url_for('mfa_verify_email'))
+                        elif account['mfa_method'] == 'sms' and account['phone_verified']:
+                            generate_and_send_sms_2fa_code(account['id'], account['phone_number'])
+                            return redirect(url_for('mfa_verify_sms'))
+                    else:
+                        return redirect(url_for('home'))
+                else:
+                    msg = 'Face recognition failed! Account not found.'
+            else:
+                msg = 'Face recognition failed/spoof!'
+        except Exception as e:
+            print(f"Exception during face recognition: {e}")
+            msg = 'An error occurred during face recognition.'
+        return render_template('login.html', msg=msg)
+
+    return render_template('login.html', msg="Face recognition not attempted")
 
 @app.route('/mfa_verify', methods=['GET', 'POST'])
 def mfa_verify():
@@ -578,10 +675,69 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+@app.route('/setup_face_recognition_verify', methods=['GET', 'POST'])
+@login_required
+def setup_face_recognition_verify():
+    if request.method == 'POST':
+        password = request.form['password']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT password FROM users WHERE id = %s', (session['id'],))
+        account = cursor.fetchone()
+        if account and check_password_hash(account['password'], password):
+            session['face_recognition_verified'] = True
+            return redirect(url_for('setup_face_recognition'))
+        else:
+            flash('Incorrect password. Please try again.')
+            return redirect(url_for('account'))
+    return render_template('account.html')
+
+
+@app.route('/setup_face_recognition', methods=['GET', 'POST'])
+@login_required
+def setup_face_recognition():
+    msg = ''
+    if request.method == 'POST':
+        face_image_data = request.form.get('face_image_data')
+        face_image_file = request.files.get('face_image_file')
+
+        face_image_filename = None
+
+        if face_image_data or face_image_file:
+            face_image_filename = os.path.join(app.config['FACE_IMAGES_FOLDER'], f'{session["username"]}.jpg')
+            if face_image_data:
+                face_image_data = face_image_data.split(',')[1]
+                face_image = base64.b64decode(face_image_data)
+                with open(face_image_filename, 'wb') as f:
+                    f.write(face_image)
+            elif face_image_file:
+                face_image_file.save(face_image_filename)
+
+            # Check if the image contains a face
+            if not detect_face(face_image_filename):
+                msg = 'No recognizable face detected in the uploaded image. Please try again.'
+                # Delete the invalid face image file
+                if os.path.exists(face_image_filename):
+                    os.remove(face_image_filename)
+                return render_template('setup_face_recognition.html', msg=msg)
+
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('UPDATE users SET face_image = %s WHERE id = %s', (face_image_filename, session['id']))
+            mysql.connection.commit()
+            log_action(session['username'], 'Updated face recognition setup')
+            flash('Face recognition setup updated successfully.')
+            return redirect(url_for('account'))
+        else:
+            msg = 'No image data provided. Please upload an image or use the webcam.'
+
+    return render_template('setup_face_recognition.html', msg=msg)
+
+
 
 @app.route('/home')
 @login_required
 def home():
+    if 'locked' in session:
+        return redirect(url_for('unlock_session'))
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Fetch user files
@@ -775,11 +931,23 @@ def change_password():
     if len(new_password) < 8 or not re.search(r"[A-Za-z]", new_password) or not re.search(r"[0-9]", new_password) or not re.search(r"[!@#$%^&*]", new_password):
         flash('New password must be at least 8 characters long, contain letters, numbers, and special characters.')
         return redirect(url_for('account'))
+
+    cursor.execute('SELECT password_hash FROM previous_passwords WHERE user_id = %s', (session['id'],))
+    previous_passwords = cursor.fetchall()
+
+    for previous_password in previous_passwords:
+        if previous_password['password_hash'] == new_password:
+            flash(
+                'New password cannot be the same as any of the previous passwords. Please choose a different password.')
+            return redirect(url_for('account'))
+
     hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
+    cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)',(session['id'], account['password']))
     cursor.execute('UPDATE users SET password = %s WHERE id = %s', (hashed_password, session['id']))
     mysql.connection.commit()
     session.clear()
     flash('Password changed successfully. Please log in with your new password.')
+    log_action(session.get('username', 'Unknown'), 'Password changed')
     return redirect(url_for('password_change_success'))
 
 @app.route('/password_change_success')
@@ -998,6 +1166,7 @@ def verify_otp():
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_password():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     if 'otp_verified' not in session:
         flash('OTP verification required.')
         return redirect(url_for('forgot_password'))
@@ -1015,7 +1184,17 @@ def reset_password():
             return redirect(url_for('reset_password'))
 
         username = session.get('username')
+        cursor.execute('SELECT password_hash FROM previous_passwords WHERE user_id = %s', (session['id'],))
+        previous_passwords = cursor.fetchall()
 
+        for previous_password in previous_passwords:
+            if previous_password['password_hash'] == new_password:
+                flash(
+                    'New password cannot be the same as any of the previous passwords. Please choose a different password.')
+                return redirect(url_for('account'))
+
+        cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)',
+                       (session['id'], account['password']))
         # Hash the new password before saving it to the database
         hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
         print(f"Hashed new password: {hashed_password}")
@@ -1316,7 +1495,6 @@ def admin_login():
             if account['role'] != 'admin':
                 msg = 'Unauthorized access for this role. Please use the user login page.'
             else:
-
                 session['admin_id'] = account['id']
                 session['loggedin'] = True
                 session['username'] = account['username']
@@ -1364,9 +1542,43 @@ def admin_delete_group_file(file_id):
     cursor.close()
 
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin_lock_session', methods=['POST'])
+def admin_lock_session():
+    if 'loggedin' in session and session.get('role') == 'admin':
+        session['locked'] = True
+        log_user_action(session['username'], session['session_id'], 'Locked session')
+    return redirect(url_for('admin_unlock_session'))
+
+
+@app.route('/admin_unlock_session', methods=['GET', 'POST'])
+def admin_unlock_session():
+    msg = ''
+    if 'locked' not in session or 'id' not in session:
+        return redirect(url_for('admin_dashboard'))
+
+    if request.method == 'POST':
+        password = request.form['password']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users WHERE id = %s', (session['id'],))
+        account = cursor.fetchone()
+
+        if account and check_password_hash(account['password'], password):
+            session.pop('locked', None)
+            log_user_action(session['username'], session['session_id'], 'Unlocked session')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            msg = 'Incorrect password!'
+
+    return render_template('admin_unlock_session.html', msg=msg)
+
+
 @app.route('/admin_dashboard', methods=['GET', 'POST'])
 @login_required
 def admin_dashboard():
+    if 'locked' in session:
+        return redirect(url_for('admin_unlock_session'))
+
     if session.get('role') != 'admin':
         return redirect(url_for('home'))
 
@@ -1398,6 +1610,7 @@ def admin_dashboard():
     cursor.close()
 
     return render_template('admin_dashboard.html', users=users, files=files, search_query=search_query, groups=groups)
+
 
 
 
@@ -1450,14 +1663,21 @@ def delete_user():
         flash('No user specified for deletion', 'danger')
         return redirect(url_for('admin_dashboard'))
 
-    cursor = mysql.connection.cursor()
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     try:
-        # Delete associated records in the files table
-        cursor.execute('DELETE FROM devices WHERE user_id = %s', (user_id,))
-        cursor.execute('DELETE FROM files WHERE user_id = %s', (user_id,))
-        # Delete associated records in the devices table
+        # Fetch the user's face image file path
+        cursor.execute('SELECT face_image FROM users WHERE id = %s', (user_id,))
+        user = cursor.fetchone()
+        if user and user['face_image']:
+            face_image_path = user['face_image']
+            if os.path.exists(face_image_path):
+                os.remove(face_image_path)
 
+        # Delete associated records in the devices table
+        cursor.execute('DELETE FROM devices WHERE user_id = %s', (user_id,))
+        # Delete associated records in the files table
+        cursor.execute('DELETE FROM files WHERE user_id = %s', (user_id,))
         # Now delete the user
         cursor.execute('DELETE FROM users WHERE id = %s', (user_id,))
         mysql.connection.commit()
@@ -1469,6 +1689,7 @@ def delete_user():
         cursor.close()
 
     return redirect(url_for('admin_dashboard'))
+
 
 @app.route('/confirm_delete_file', methods=['POST'])
 def confirm_delete_file():
@@ -2071,11 +2292,6 @@ def summarize_report(report):
 
     return summary
 
-
-
-
-
-
 def scan_file(file_path, user_email):
     url = 'https://www.virustotal.com/api/v3/files'
     headers = {
@@ -2146,6 +2362,32 @@ def extend_session():
     session.permanent = True  # Extend session permanency
     app.permanent_session_lifetime = timedelta(minutes=30)  # Extend session lifetime
     return 'Session extended successfully', 200
+
+def setup_logger():
+    logger = logging.getLogger('user_actions')
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler('user_actions.log')
+    formatter = logging.Formatter('%(asctime)s - %(username)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    return logger
+
+logger = setup_logger()
+
+def log_action(username, action):
+    if 'username' in session:
+        extra = {'username': session['username']}
+    else:
+        extra = {'username': 'Unknown'}
+    logger.info(action, extra=extra)
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

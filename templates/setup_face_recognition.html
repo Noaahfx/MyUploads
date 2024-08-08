@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Face Recognition Setup{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Face Recognition Setup</h2>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-info mt-3">{{ messages[0] }}</div>
+        {% endif %}
+    {% endwith %}
+    <form action="{{ url_for('setup_face_recognition') }}" method="post" enctype="multipart/form-data" class="mt-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Upload Face Image</h4>
+                <div class="form-group">
+                    <label for="face_image_file">Upload Face Image:</label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" name="face_image_file" id="face_image_file" accept="image/*">
+                        <label class="custom-file-label" for="face_image_file">Choose file</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <h4>Or use your webcam</h4>
+                    <div class="d-flex justify-content-center mb-3">
+                        <button type="button" class="btn btn-secondary" id="start-webcam">Start Webcam</button>
+                        <button type="button" class="btn btn-secondary ml-2" id="capture-photo" style="display: none;">Capture Photo</button>
+                        <button type="button" class="btn btn-secondary ml-2" id="retake-photo" style="display: none;">Retake Photo</button>
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <video id="webcam-video" style="display: none;"></video>
+                    </div>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <input type="hidden" name="face_image_data" id="face_image_data">
+                </div>
+                <button type="submit" class="btn btn-primary">SetUp/Update Face Recognition</button>
+                {% if msg %}
+                    <p>{{ msg }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    // Custom file input label change
+    document.querySelectorAll('.custom-file-input').forEach(input => {
+        input.addEventListener('change', function(e) {
+            var fileName = document.getElementById("face_image_file").files[0].name;
+            var nextSibling = e.target.nextElementSibling
+            nextSibling.innerText = fileName
+        })
+    });
+
+    // Webcam setup
+    const startWebcamButton = document.getElementById('start-webcam');
+    const capturePhotoButton = document.getElementById('capture-photo');
+    const retakePhotoButton = document.getElementById('retake-photo');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    const video = document.getElementById('webcam-video');
+
+    startWebcamButton.addEventListener('click', () => {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+                video.style.display = 'block';
+                startWebcamButton.style.display = 'none';
+                capturePhotoButton.style.display = 'inline';
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: " + err);
+            });
+    });
+
+    capturePhotoButton.addEventListener('click', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL('image/png');
+        document.getElementById('face_image_data').value = dataURL;
+        video.pause();
+        capturePhotoButton.style.display = 'none';
+        retakePhotoButton.style.display = 'inline';
+    });
+
+    retakePhotoButton.addEventListener('click', () => {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+                video.style.display = 'block';
+                retakePhotoButton.style.display = 'none';
+                capturePhotoButton.style.display = 'inline';
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: " + err);
+            });
+    });
+</script>
+{% endblock %}

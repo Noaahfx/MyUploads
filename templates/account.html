@@ -119,8 +119,23 @@
         </div>
     </form>
     {% endif %}
+    <form action="{{ url_for('setup_face_recognition_verify') }}" method="post" class="mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Face Recognition</h4>
+            <div class="form-group">
+                <label for="password_face">Password</label>
+                <input type="password" class="form-control" id="password_face" name="password" placeholder="Enter your password" required>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="show_password_face" onclick="togglePasswordVisibility('password_face')">
+                    <label class="form-check-label" for="show_password_face">Show Password</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Set Up/Update Face Recognition</button>
+        </div>
+    </div>
+</form>
 </div>
-
 <script>
     function togglePasswordVisibility(fieldId) {
         var passwordField = document.getElementById(fieldId);

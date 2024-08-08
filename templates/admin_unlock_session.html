@@ -1,0 +1,21 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+    Admin Unlock Session
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Unlock Admin Session</h2>
+    <form method="post">
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Unlock</button>
+    </form>
+    {% if msg %}
+    <div class="alert alert-danger mt-3">{{ msg }}</div>
+    {% endif %}
+</div>
+{% endblock %}

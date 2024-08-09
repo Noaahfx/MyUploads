@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-5">
     <h2>Login</h2>
-    <form method="post" action="/login">
+    <form method="post" action="{{ url_for('login') }}">
         <div class="form-group">
             <label for="username">Username</label>
             <input type="text" class="form-control" name="username" placeholder="Enter username" required>
@@ -18,24 +18,24 @@
         <button type="submit" class="btn btn-primary">Login</button>
     </form>
     <form action="{{ url_for('face_login') }}" method="post">
-            <input type="hidden" name="face_recognition" value="true">
-            <button type="submit" class="btn btn-secondary mt-2" id="faceRecognitionButton">Face Recognition</button>
+        <input type="hidden" name="face_recognition" value="true">
+        <button type="submit" class="btn btn-secondary mt-2" id="faceRecognitionButton">Face Recognition</button>
     </form>
-    <p class="mt-3 text-danger">{{ msg }}</p>
+    <p class="mt-3 text-danger">{{ msg|safe }}</p>
     <p class="mt-3">
-        Don't have an account? <a href="/register">Sign Up Here!</a>
+        Don't have an account? <a href="{{ url_for('register') }}">Sign Up Here!</a>
     </p>
     <p class="mt-3">
-        Forgot your password? <a href="/forgot_password">Reset it here!</a>
+        Forgot your password? <a href="{{ url_for('forgot_password') }}">Reset it here!</a>
     </p>
     <p class="mt-3">
-        Verified phone number? <a href="/phone_login">Login with Phone Number</a>
+        Verified phone number? <a href="{{ url_for('phone_login') }}">Login with Phone Number</a>
     </p>
     <p class="mt-3">
-        Have a Google Account? <a href="/google_login">Sign in with Google</a>
+        Have a Google Account? <a href="{{ url_for('google_login') }}">Sign in with Google</a>
     </p>
     <p class="mt-3">
-        <a href="/admin_login">Login as admin here</a>
+        <a href="{{ url_for('admin_login') }}">Login as admin here</a>
     </p>
 </div>
 <script>

@@ -2426,4 +2426,4 @@ def log_action(username, action):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,ssl_context=('flask.crt', 'flask.key'), port=5001)

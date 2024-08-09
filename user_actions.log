@@ -671,3 +671,74 @@
 2024-08-10 00:06:52 - Username: thegrasshairboi - Session ID: f9f47c28987fa6514e89099cb2934ffbee5930fad3b457d1911f1479c5f034d9 - Action: Accessed home
 2024-08-10 00:06:52 - Username: thegrasshairboi - Session ID: f9f47c28987fa6514e89099cb2934ffbee5930fad3b457d1911f1479c5f034d9 - Action: Accessed static
 2024-08-10 00:06:52 - Username: thegrasshairboi - Session ID: f9f47c28987fa6514e89099cb2934ffbee5930fad3b457d1911f1479c5f034d9 - Action: Accessed static
+2024-08-10 01:09:46,159 - jam - Logged in with face recognition
+2024-08-10 01:09:46 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed home
+2024-08-10 01:09:46 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed static
+2024-08-10 01:09:46 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed static
+2024-08-10 01:09:51 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed lock_session
+2024-08-10 01:09:51 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Locked session
+2024-08-10 01:09:51 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed unlock_session
+2024-08-10 01:10:00 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed unlock_session
+2024-08-10 01:10:05 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed unlock_session
+2024-08-10 01:10:08 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed unlock_session
+2024-08-10 01:10:11 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed unlock_session
+2024-08-10 01:10:13 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Accessed unlock_session
+2024-08-10 01:10:13 - Username: jam - Session ID: 09ef4aa99777ab7909da7e69c5d8253d79d26f1d21d4afd0edd6b66fe586cff4 - Action: Too many failed unlock attempts
+2024-08-10 01:10:24,143 - jam - Logged in with face recognition
+2024-08-10 01:10:24 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed home
+2024-08-10 01:10:24 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed static
+2024-08-10 01:10:24 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed static
+2024-08-10 01:10:25 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed lock_session
+2024-08-10 01:10:25 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Locked session
+2024-08-10 01:10:25 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed unlock_session
+2024-08-10 01:10:29 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed unlock_session
+2024-08-10 01:10:29 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Unlocked session
+2024-08-10 01:10:29 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed home
+2024-08-10 01:10:29 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed static
+2024-08-10 01:10:29 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed static
+2024-08-10 01:11:29 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Accessed logout
+2024-08-10 01:11:29 - Username: jam - Session ID: bd2f7ebf2673ab1fab8acec9e34ac25355f34246988e6fac2fc7220b9e2f0dba - Action: Logged out
+2024-08-10 01:12:10 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Logged in
+2024-08-10 01:12:10 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed admin_dashboard
+2024-08-10 01:12:10 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:12:10 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:12:15 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed admin_dashboard
+2024-08-10 01:12:15 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:12:15 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:12:16 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed delete_user
+2024-08-10 01:12:16 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed admin_dashboard
+2024-08-10 01:12:16 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:12:16 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:12:25 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed logout
+2024-08-10 01:12:25 - Username: admin - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Logged out
+2024-08-10 01:12:59 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed home
+2024-08-10 01:12:59 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:12:59 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:13:00 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed account
+2024-08-10 01:13:00 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:13:04 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed setup_face_recognition_verify
+2024-08-10 01:13:04 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed account
+2024-08-10 01:13:04 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:13:10 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed setup_face_recognition_verify
+2024-08-10 01:13:10 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed setup_face_recognition
+2024-08-10 01:13:10 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:13:21 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed setup_face_recognition
+2024-08-10 01:13:21,668 - jam - Updated face recognition setup
+2024-08-10 01:13:21 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed account
+2024-08-10 01:13:21 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:13:27 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed logout
+2024-08-10 01:13:27 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Logged out
+2024-08-10 01:13:53,384 - jam - Logged in with face recognition
+2024-08-10 01:13:53 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed home
+2024-08-10 01:13:53 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:13:53 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed static
+2024-08-10 01:14:53 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Accessed logout
+2024-08-10 01:14:53 - Username: jam - Session ID: e8db84001f46d85dd9fedab1616a392feec27f83fc3302c8d9970e5d7ad8022a - Action: Logged out
+2024-08-10 01:36:37,739 - jam - Logged in with face recognition
+2024-08-10 01:36:37 - Username: jam - Session ID: 28b9a01388c82046b72284f287b6c81e770df1e8ed3e3c1e4466f2dd013a117c - Action: Accessed home
+2024-08-10 01:36:37 - Username: jam - Session ID: 28b9a01388c82046b72284f287b6c81e770df1e8ed3e3c1e4466f2dd013a117c - Action: Accessed static
+2024-08-10 01:36:37 - Username: jam - Session ID: 28b9a01388c82046b72284f287b6c81e770df1e8ed3e3c1e4466f2dd013a117c - Action: Accessed static
+2024-08-10 01:36:39 - Username: jam - Session ID: 28b9a01388c82046b72284f287b6c81e770df1e8ed3e3c1e4466f2dd013a117c - Action: Accessed account
+2024-08-10 01:36:39 - Username: jam - Session ID: 28b9a01388c82046b72284f287b6c81e770df1e8ed3e3c1e4466f2dd013a117c - Action: Accessed static
+2024-08-10 01:36:40 - Username: jam - Session ID: 28b9a01388c82046b72284f287b6c81e770df1e8ed3e3c1e4466f2dd013a117c - Action: Accessed logout
+2024-08-10 01:36:40 - Username: jam - Session ID: 28b9a01388c82046b72284f287b6c81e770df1e8ed3e3c1e4466f2dd013a117c - Action: Logged out

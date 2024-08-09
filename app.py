@@ -102,6 +102,10 @@ def unlock_session():
     if 'locked' not in session or 'id' not in session:
         return redirect(url_for('home'))
 
+    # Initialize or increment the failed attempts count
+    if 'failed_attempts' not in session:
+        session['failed_attempts'] = 0
+
     if request.method == 'POST':
         password = request.form['password']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -110,12 +114,20 @@ def unlock_session():
 
         if account and check_password_hash(account['password'], password):
             session.pop('locked', None)
+            session.pop('failed_attempts', None)  # Reset failed attempts
             log_user_action(session['username'], session['session_id'], 'Unlocked session')
             return redirect(url_for('home'))
         else:
-            msg = 'Incorrect password!'
+            session['failed_attempts'] += 1
+            if session['failed_attempts'] >= 5:
+                log_user_action(session['username'], session['session_id'], 'Too many failed unlock attempts')
+                session.clear()  # Clear the session
+                msg = 'Too many failed attempts. Redirecting to login.'
+                return redirect(url_for('login'))  # Redirect to login
+            else:
+                msg = 'Incorrect password! Please try again.'
 
-    return render_template('unlock_session.html', msg=msg)
+    return render_template('unlock_session.html',msg=msg)
 
 
 @app.before_request

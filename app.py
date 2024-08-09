@@ -1,4 +1,5 @@
 import logging
+import sys
 import oauthlib
 from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory, jsonify, flash, send_file
 from flask_mysqldb import MySQL
@@ -514,69 +515,17 @@ def get_location_from_ip(ip):
         print(f"Error getting location from IP: {e}")
         return None
 
-
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     msg = ''
-#     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-#         username = request.form['username']
-#         password = request.form['password']
-#
-#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-#         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
-#         account = cursor.fetchone()
-#
-#         if account and check_password_hash(account['password'], password):
-#             if account['role'] != 'user':
-#                 msg = 'Unauthorized access for this role. Please use the admin login page.'
-#             elif not account['email_verified']:
-#                 msg = 'Your account is not verified. Please check your email.'
-#             else:
-#                 session['loggedin'] = True
-#                 session['id'] = account['id']
-#                 session['username'] = account['username']
-#                 session['role'] = account['role']
-#                 session['mfa_enabled'] = account['mfa_enabled']
-#                 session['mfa_method'] = account['mfa_method']
-#                 session['session_id'] = hashlib.sha256(os.urandom(64)).hexdigest()
-#                 session['regenerate_time'] = datetime.now()
-#
-#                 log_user_action(session['username'], session['session_id'], 'Logged in')
-#
-#                 if account['mfa_enabled']:
-#                     if account['mfa_method'] == 'app':
-#                         session['mfa_secret'] = account['mfa_secret']
-#                         return redirect(url_for('mfa_verify'))
-#                     elif account['mfa_method'] == 'email':
-#                         code = generate_2fa_code()
-#                         expiration = datetime.now() + timedelta(minutes=5)
-#                         cursor.execute('UPDATE users SET email_2fa_code = %s, email_2fa_expiration = %s WHERE id = %s',
-#                                        (code, expiration, account['id']))
-#                         mysql.connection.commit()
-#                         send_2fa_email(account['email'], code)
-#                         return redirect(url_for('mfa_verify_email'))
-#                     elif account['mfa_method'] == 'sms' and account['phone_verified']:
-#                         generate_and_send_sms_2fa_code(account['id'], account['phone_number'])
-#                         return redirect(url_for('mfa_verify_sms'))
-#                 else:
-#                     device_hash = get_device_hash()
-#                     cursor.execute('SELECT * FROM devices WHERE user_id = %s AND device_hash = %s',
-#                                    (account['id'], device_hash))
-#                     device = cursor.fetchone()
-#
-#                     if not device:
-#                         user_ip = get_public_ip()
-#                         send_login_alert(account['email'], user_ip)
-#                         cursor.execute('INSERT INTO devices (user_id, device_hash) VALUES (%s, %s)',
-#                                        (account['id'], device_hash))
-#                         mysql.connection.commit()
-#                     return redirect(url_for('home'))
-#         else:
-#             msg = 'Incorrect username/password!'
-#     return render_template('login.html', msg=msg)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     msg = ''
+    # Initialize or increment the failed attempts count
+    if 'user_failed_attempts' not in session:
+        session['user_failed_attempts'] = 0
+
+    if session['user_failed_attempts'] >= 5:
+        print("Too many failed attempts. Terminating the program.")
+        sys.exit("Program terminated due to too many failed login attempts.")
+
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         username = request.form['username'].strip()
         password = request.form['password']
@@ -600,6 +549,7 @@ def login():
                 session['session_id'] = hashlib.sha256(os.urandom(64)).hexdigest()
                 session['regenerate_time'] = datetime.now()
 
+                session.pop('user_failed_attempts', None)  # Reset failed attempts
                 log_user_action(session['username'], session['session_id'], 'Logged in')
 
                 if account['mfa_enabled']:
@@ -631,7 +581,13 @@ def login():
                         mysql.connection.commit()
                     return redirect(url_for('home'))
         else:
-            msg = 'Incorrect username/password!'
+            session['user_failed_attempts'] += 1
+            if session['user_failed_attempts'] >= 5:
+                print("Too many failed attempts. Terminating the program.")
+                sys.exit("Program terminated due to too many failed login attempts.")
+            else:
+                msg = 'Incorrect username/password!'
+
     return render_template('login.html', msg=msg)
 @app.route('/face_login', methods=['POST'])
 def face_login():
@@ -941,6 +897,15 @@ def verify_phone():
         return redirect(url_for('account'))
 
     phone_number = request.form['phone_number']
+
+    # Check if the phone number is already linked to another account
+    cursor.execute('SELECT id FROM users WHERE phone_number = %s AND phone_verified = TRUE', (phone_number,))
+    existing_account = cursor.fetchone()
+
+    if existing_account:
+        flash('This phone number is already linked to another account.')
+        return redirect(url_for('account'))
+
     if not is_valid_phone_number(phone_number):
         flash('Invalid phone number format. Please enter a valid phone number.')
         return redirect(url_for('account'))
@@ -959,14 +924,21 @@ def verify_phone():
         flash(f"Failed to send verification code: {e}")
     return redirect(url_for('account'))
 
-
-
 @app.route('/confirm_phone', methods=['POST'])
 @login_required
 def confirm_phone():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SELECT phone_verification_code FROM users WHERE id = %s', (session['id'],))
     account = cursor.fetchone()
+
+    # Check if the phone number is already linked to another account
+    phone_number = request.form.get('phone_number')
+    cursor.execute('SELECT id FROM users WHERE phone_number = %s AND phone_verified = TRUE', (phone_number,))
+    existing_account = cursor.fetchone()
+
+    if existing_account:
+        flash('This phone number is already linked to another account.')
+        return redirect(url_for('account'))
 
     if account['phone_verification_code'] == request.form['verification_code']:
         cursor.execute('UPDATE users SET phone_verified = %s, phone_verification_code = NULL WHERE id = %s',
@@ -1554,8 +1526,16 @@ def complete_google_signup():
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
     msg = ''
+    # Initialize or increment the failed attempts count
+    if 'admin_failed_attempts' not in session:
+        session['admin_failed_attempts'] = 0
+
+    if session['admin_failed_attempts'] >= 5:
+        print("Too many failed attempts. Terminating the program.")
+        sys.exit("Program terminated due to too many failed login attempts.")
+
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -1570,14 +1550,20 @@ def admin_login():
                 session['loggedin'] = True
                 session['username'] = account['username']
                 session['role'] = account['role']
-
                 session['session_id'] = hashlib.sha256(os.urandom(64)).hexdigest()
                 session['regenerate_time'] = datetime.now()
 
+                session.pop('admin_failed_attempts', None)  # Reset failed attempts
                 log_user_action(session['username'], session['session_id'], 'Logged in')
                 return redirect(url_for('admin_dashboard'))
         else:
-            msg = 'Invalid credentials or unauthorized access'
+            session['admin_failed_attempts'] += 1
+            if session['admin_failed_attempts'] >= 5:
+                print("Too many failed attempts. Terminating the program.")
+                sys.exit("Program terminated due to too many failed login attempts.")
+            else:
+                msg = 'Invalid credentials or unauthorized access'
+
     return render_template('admin_login.html', msg=msg)
 
 @app.route('/admin/group/delete/<int:group_id>', methods=['POST'])

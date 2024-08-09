@@ -102,6 +102,10 @@ def unlock_session():
     if 'locked' not in session or 'id' not in session:
         return redirect(url_for('home'))
 
+    # Initialize or increment the failed attempts count
+    if 'failed_attempts' not in session:
+        session['failed_attempts'] = 0
+
     if request.method == 'POST':
         password = request.form['password']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -110,10 +114,18 @@ def unlock_session():
 
         if account and check_password_hash(account['password'], password):
             session.pop('locked', None)
+            session.pop('failed_attempts', None)  # Reset failed attempts
             log_user_action(session['username'], session['session_id'], 'Unlocked session')
             return redirect(url_for('home'))
         else:
-            msg = 'Incorrect password!'
+            session['failed_attempts'] += 1
+            if session['failed_attempts'] >= 5:
+                log_user_action(session['username'], session['session_id'], 'Too many failed unlock attempts')
+                session.clear()  # Clear the session
+                msg = 'Too many failed attempts. Redirecting to login.'
+                return redirect(url_for('login'))  # Redirect to login
+            else:
+                msg = 'Incorrect password! Please try again.'
 
     return render_template('unlock_session.html', msg=msg)
 
@@ -503,11 +515,70 @@ def get_location_from_ip(ip):
         return None
 
 
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     msg = ''
+#     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+#         username = request.form['username']
+#         password = request.form['password']
+#
+#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+#         cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+#         account = cursor.fetchone()
+#
+#         if account and check_password_hash(account['password'], password):
+#             if account['role'] != 'user':
+#                 msg = 'Unauthorized access for this role. Please use the admin login page.'
+#             elif not account['email_verified']:
+#                 msg = 'Your account is not verified. Please check your email.'
+#             else:
+#                 session['loggedin'] = True
+#                 session['id'] = account['id']
+#                 session['username'] = account['username']
+#                 session['role'] = account['role']
+#                 session['mfa_enabled'] = account['mfa_enabled']
+#                 session['mfa_method'] = account['mfa_method']
+#                 session['session_id'] = hashlib.sha256(os.urandom(64)).hexdigest()
+#                 session['regenerate_time'] = datetime.now()
+#
+#                 log_user_action(session['username'], session['session_id'], 'Logged in')
+#
+#                 if account['mfa_enabled']:
+#                     if account['mfa_method'] == 'app':
+#                         session['mfa_secret'] = account['mfa_secret']
+#                         return redirect(url_for('mfa_verify'))
+#                     elif account['mfa_method'] == 'email':
+#                         code = generate_2fa_code()
+#                         expiration = datetime.now() + timedelta(minutes=5)
+#                         cursor.execute('UPDATE users SET email_2fa_code = %s, email_2fa_expiration = %s WHERE id = %s',
+#                                        (code, expiration, account['id']))
+#                         mysql.connection.commit()
+#                         send_2fa_email(account['email'], code)
+#                         return redirect(url_for('mfa_verify_email'))
+#                     elif account['mfa_method'] == 'sms' and account['phone_verified']:
+#                         generate_and_send_sms_2fa_code(account['id'], account['phone_number'])
+#                         return redirect(url_for('mfa_verify_sms'))
+#                 else:
+#                     device_hash = get_device_hash()
+#                     cursor.execute('SELECT * FROM devices WHERE user_id = %s AND device_hash = %s',
+#                                    (account['id'], device_hash))
+#                     device = cursor.fetchone()
+#
+#                     if not device:
+#                         user_ip = get_public_ip()
+#                         send_login_alert(account['email'], user_ip)
+#                         cursor.execute('INSERT INTO devices (user_id, device_hash) VALUES (%s, %s)',
+#                                        (account['id'], device_hash))
+#                         mysql.connection.commit()
+#                     return redirect(url_for('home'))
+#         else:
+#             msg = 'Incorrect username/password!'
+#     return render_template('login.html', msg=msg)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -562,7 +633,6 @@ def login():
         else:
             msg = 'Incorrect username/password!'
     return render_template('login.html', msg=msg)
-
 @app.route('/face_login', methods=['POST'])
 def face_login():
     msg = ''

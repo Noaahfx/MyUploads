@@ -10,24 +10,24 @@
                     <li class="nav-item">
                         <a class="nav-link btn btn-dark text-primary mr-2" href="/upload">Upload File</a>
                     </li>
-                    <li>
+                    <li class="nav-item">
                         <a class="nav-link btn btn-dark text-primary mr-2" href="/create_group">Create Group</a>
                     </li>
-                    <li>
+                    <li class="nav-item">
                         <a class="nav-link btn btn-dark text-primary mr-2" href="/view_groups">View/Disable Groups</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link btn btn-dark text-primary mr-2" href="/account">Account Settings</a>
                     </li>
                     <li class="nav-item">
-                        <form action="{{ url_for('lock_session') }}" method="post">
-                            <button type="submit" class="btn btn-warning">Lock Session</button>
+                        <form action="{{ url_for('lock_session') }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-warning mr-2">Lock Session</button>
                         </form>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-danger text-white" href="/logout">Logout</a>
+                    </li>
                 {% endif %}
-                <li class="nav-item">
-                    <a class="nav-link btn btn-danger text-white" href="/logout">Logout</a>
-                </li>
             {% else %}
                 <li class="nav-item">
                     <a class="nav-link btn btn-dark text-primary mr-2" href="/login">Login</a>

@@ -1158,6 +1158,9 @@ def verify_otp():
             otp_expiration = account['otp_expiration'].replace(tzinfo=timezone.utc)
             if otp == account['otp_code'] and datetime.now(timezone.utc) <= otp_expiration:
                 session['otp_verified'] = True
+                cursor.execute('SELECT id FROM users WHERE username = %s', (username,))
+                user = cursor.fetchone()
+                session['id'] = user['id']  # Ensure session['id'] is set here
                 return redirect(url_for('reset_password'))
             else:
                 flash('Invalid or expired OTP code.')
@@ -1166,10 +1169,12 @@ def verify_otp():
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_password():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    if 'otp_verified' not in session:
+    if 'otp_verified' not in session or 'id' not in session:
         flash('OTP verification required.')
         return redirect(url_for('forgot_password'))
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    username = session.get('username')
 
     if request.method == 'POST':
         new_password = request.form['new_password']
@@ -1183,24 +1188,20 @@ def reset_password():
             flash('New password must be at least 8 characters long, contain letters, numbers, and special characters.')
             return redirect(url_for('reset_password'))
 
-        username = session.get('username')
         cursor.execute('SELECT password_hash FROM previous_passwords WHERE user_id = %s', (session['id'],))
         previous_passwords = cursor.fetchall()
 
         for previous_password in previous_passwords:
-            if previous_password['password_hash'] == new_password:
+            if check_password_hash(previous_password['password_hash'], new_password):
                 flash(
                     'New password cannot be the same as any of the previous passwords. Please choose a different password.')
-                return redirect(url_for('account'))
+                return redirect(url_for('reset_password'))
 
-        cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)',
-                       (session['id'], account['password']))
-        # Hash the new password before saving it to the database
         hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
-        print(f"Hashed new password: {hashed_password}")
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('UPDATE users SET password = %s WHERE username = %s', (hashed_password, username))
+        mysql.connection.commit()
+
+        cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)', (session['id'], hashed_password))
         mysql.connection.commit()
 
         flash('Password changed successfully.')

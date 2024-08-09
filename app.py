@@ -1544,35 +1544,6 @@ def admin_delete_group_file(file_id):
 
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin_lock_session', methods=['POST'])
-def admin_lock_session():
-    if 'loggedin' in session and session.get('role') == 'admin':
-        session['locked'] = True
-        log_user_action(session['username'], session['session_id'], 'Locked session')
-    return redirect(url_for('admin_unlock_session'))
-
-
-@app.route('/admin_unlock_session', methods=['GET', 'POST'])
-def admin_unlock_session():
-    msg = ''
-    if 'locked' not in session or 'id' not in session:
-        return redirect(url_for('admin_dashboard'))
-
-    if request.method == 'POST':
-        password = request.form['password']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM users WHERE id = %s', (session['id'],))
-        account = cursor.fetchone()
-
-        if account and check_password_hash(account['password'], password):
-            session.pop('locked', None)
-            log_user_action(session['username'], session['session_id'], 'Unlocked session')
-            return redirect(url_for('admin_dashboard'))
-        else:
-            msg = 'Incorrect password!'
-
-    return render_template('admin_unlock_session.html', msg=msg)
-
 
 @app.route('/admin_dashboard', methods=['GET', 'POST'])
 @login_required
@@ -2381,12 +2352,6 @@ def log_action(username, action):
     else:
         extra = {'username': 'Unknown'}
     logger.info(action, extra=extra)
-
-
-
-
-
-
 
 
 

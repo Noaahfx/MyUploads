@@ -1382,7 +1382,7 @@ def google_login():
 
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
-        redirect_uri="http://127.0.0.1:5000/google_login/callback",
+        redirect_uri="https://127.0.0.1:5000/google_login/callback",
         scope=["openid", "email", "profile"],
     )
     return redirect(request_uri)
@@ -2434,4 +2434,4 @@ def log_action(username, action):
 
 
 if __name__ == "__main__":
-    app.run(debug=True,ssl_context=('flask.crt', 'flask.key'), port=5001)
+    app.run(debug=True, ssl_context=('localhost+1.pem', 'localhost+1-key.pem'))

@@ -5,6 +5,21 @@ Admin:
 Username: Admin
 Password: Pa$$w0rd
 
+Https Steps:
+Open PowerShell in Admin Mode:
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+choco install mkcert
+
+mkcert -install
+
+mkcert localhost
+
+cd "C:\Users\soodi\OneDrive\Desktop\Noah\School\NYP\Sem 3\SECPRJ\Project(Combined)" {Ur Prj Path}
+
+mkcert localhost 127.0.0.1
+
 Database Script:
 -- Create the database if it doesn't exist
 CREATE DATABASE IF NOT EXISTS `secprj` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

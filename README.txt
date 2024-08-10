@@ -1,12 +1,15 @@
 ----------------------------------------------------------------------------------------------------------------------------------
 To Install:
-pip install flask flask_mysqldb werkzeug requests pyotp qrcode twilio oauthlib pillow numpy pandas opencv-python tensorflow gdown mtcnn retina-face tf-keras cryptography torch
+pip install facenet-pytorch flask flask_mysqldb werkzeug requests pyotp qrcode twilio oauthlib pillow numpy pandas opencv-python tensorflow gdown mtcnn retina-face tf-keras cryptography
 ----------------------------------------------------------------------------------------------------------------------------------
 Admin:
 Username: Admin
 Password: Pa$$w0rd
 ----------------------------------------------------------------------------------------------------------------------------------
 Https Steps:
+
+Remove files 'localhost+1.pem' and 'localhost+1-key.pem' from this project first
+
 Open PowerShell in Admin Mode:
 
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))

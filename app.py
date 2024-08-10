@@ -29,6 +29,7 @@ import json
 import MySQLdb.cursors
 from qrcode.image.pil import PilImage
 from PIL import Image
+from cryptography.fernet import Fernet
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 app = Flask(__name__)
@@ -53,9 +54,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['TEMP_FOLDER'] = TEMP_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB limit
 
-FACE_IMAGES_FOLDER = 'static/face_images'
-app.config['FACE_IMAGES_FOLDER'] = FACE_IMAGES_FOLDER
-os.makedirs(FACE_IMAGES_FOLDER, exist_ok=True)
+# FACE_IMAGES_FOLDER = 'static/face_images'
+# app.config['FACE_IMAGES_FOLDER'] = FACE_IMAGES_FOLDER
+# os.makedirs(FACE_IMAGES_FOLDER, exist_ok=True)
 
 
 # Ensure the uploads folders exist
@@ -77,6 +78,21 @@ GOOGLE_CLIENT_SECRET = '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'
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
 
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
+
+with open('encryption_key.key', 'rb') as key_file:
+    encryption_key = key_file.read()
+
+cipher = Fernet(encryption_key)
+
+def encrypt_path(file_path):
+    """Encrypts the file path using Fernet symmetric encryption."""
+    encrypted_path = cipher.encrypt(file_path.encode())
+    return encrypted_path.decode()
+
+def decrypt_path(encrypted_path):
+    """Decrypts the encrypted file path."""
+    decrypted_path = cipher.decrypt(encrypted_path.encode())
+    return decrypted_path.decode()
 
 def log_user_action(user_id, session_id, action):
     log_file_path = 'user_actions.log'
@@ -1025,9 +1041,11 @@ def save_file(file_path, user_id, filename, replace=False):
             counter += 1
         os.rename(file_path, final_filepath)
 
-    cursor.execute('INSERT INTO files (user_id, filename, filepath) VALUES (%s, %s, %s)', (user_id, new_filename, final_filepath))
+    encrypted_filepath = encrypt_path(final_filepath)
+    cursor.execute('INSERT INTO files (user_id, filename, filepath) VALUES (%s, %s, %s)', (user_id, new_filename, encrypted_filepath))
     mysql.connection.commit()
     return new_filename
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -1086,7 +1104,8 @@ def view_file(file_id):
     cursor.execute('SELECT filename, filepath FROM files WHERE id = %s AND user_id = %s', (file_id, session['id']))
     file = cursor.fetchone()
     if file:
-        return send_from_directory(directory=os.path.dirname(file['filepath']), path=os.path.basename(file['filepath']))
+        decrypted_filepath = decrypt_path(file['filepath'])
+        return send_from_directory(directory=os.path.dirname(decrypted_filepath), path=os.path.basename(decrypted_filepath))
     else:
         return 'File not found or you do not have permission to view this file.'
 
@@ -1097,7 +1116,8 @@ def download_file(file_id):
     cursor.execute('SELECT filename, filepath FROM files WHERE id = %s AND user_id = %s', (file_id, session['id']))
     file = cursor.fetchone()
     if file:
-        return send_from_directory(directory=os.path.dirname(file['filepath']), path=os.path.basename(file['filepath']), as_attachment=True)
+        decrypted_filepath = decrypt_path(file['filepath'])
+        return send_from_directory(directory=os.path.dirname(decrypted_filepath), path=os.path.basename(decrypted_filepath), as_attachment=True)
     else:
         return 'File not found or you do not have permission to download this file.'
 
@@ -1108,12 +1128,14 @@ def delete_file(file_id):
     cursor.execute('SELECT filepath FROM files WHERE id = %s AND user_id = %s', (file_id, session['id']))
     file = cursor.fetchone()
     if file:
-        os.remove(file['filepath'])
+        decrypted_filepath = decrypt_path(file['filepath'])
+        os.remove(decrypted_filepath)
         cursor.execute('DELETE FROM files WHERE id = %s AND user_id = %s', (file_id, session['id']))
         mysql.connection.commit()
         return redirect(url_for('home'))
     else:
         return 'File not found or you do not have permission to delete this file.'
+
 
 @app.route('/mfa_verify_sms', methods=['GET', 'POST'])
 def mfa_verify_sms():
@@ -1762,14 +1784,14 @@ def create_group():
         created_by = session['id']
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM `users_groups` WHERE name = %s', (group_name,))
+        cursor.execute('SELECT * FROM users_groups WHERE name = %s', (group_name,))
         existing_group = cursor.fetchone()
 
         if existing_group:
             error_message = 'Group name is already in use. Please choose a different name.'
         else:
             # Insert the new group
-            cursor.execute('INSERT INTO `users_groups` (name, created_by) VALUES (%s, %s)', (group_name, created_by))
+            cursor.execute('INSERT INTO users_groups (name, created_by) VALUES (%s, %s)', (group_name, created_by))
             mysql.connection.commit()
 
             # Get the id of the newly created group
@@ -1821,7 +1843,7 @@ def disable_group(group_id):
         return redirect(url_for('login'))
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('UPDATE `users_groups` SET is_active = FALSE WHERE id = %s AND created_by = %s', (group_id, session['id']))
+    cursor.execute('UPDATE users_groups SET is_active = FALSE WHERE id = %s AND created_by = %s', (group_id, session['id']))
     mysql.connection.commit()
     cursor.close()
 
@@ -1834,7 +1856,7 @@ def enable_group(group_id):
         return redirect(url_for('login'))
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('UPDATE `users_groups` SET is_active = TRUE WHERE id = %s AND created_by = %s', (group_id, session['id']))
+    cursor.execute('UPDATE users_groups SET is_active = TRUE WHERE id = %s AND created_by = %s', (group_id, session['id']))
     mysql.connection.commit()
     cursor.close()
 
@@ -1847,7 +1869,7 @@ def delete_group(group_id):
         return redirect(url_for('login'))
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('DELETE FROM `users_groups` WHERE id = %s AND created_by = %s', (group_id, session['id']))
+    cursor.execute('DELETE FROM users_groups WHERE id = %s AND created_by = %s', (group_id, session['id']))
     mysql.connection.commit()
     cursor.close()
 
@@ -1860,7 +1882,7 @@ def invite_user(group_id):
         return redirect(url_for('login'))
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM `users_groups` WHERE id = %s AND created_by = %s', (group_id, session['id']))
+    cursor.execute('SELECT * FROM users_groups WHERE id = %s AND created_by = %s', (group_id, session['id']))
     group = cursor.fetchone()
 
     if not group:
@@ -1874,14 +1896,14 @@ def invite_user(group_id):
     error_message = None
     if request.method == 'POST':
         invitee_username = request.form['invitee_username']
-        cursor.execute('SELECT * FROM `users` WHERE username = %s', (invitee_username,))
+        cursor.execute('SELECT * FROM users WHERE username = %s', (invitee_username,))
         invitee = cursor.fetchone()
 
         if not invitee:
             error_message = 'No user found with that username.'
         else:
             cursor.execute(
-                'INSERT INTO `group_invitations` (group_id, inviter_id, invitee_username) VALUES (%s, %s, %s)',
+                'INSERT INTO group_invitations (group_id, inviter_id, invitee_username) VALUES (%s, %s, %s)',
                 (group_id, session['id'], invitee_username))
             mysql.connection.commit()
             flash('Invitation sent successfully!', 'success')
@@ -1897,9 +1919,9 @@ def view_invitations():
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SELECT gi.*, ug.name AS group_name, u.username AS inviter_name '
-                   'FROM `group_invitations` gi '
-                   'JOIN `users_groups` ug ON gi.group_id = ug.id '
-                   'JOIN `users` u ON gi.inviter_id = u.id '
+                   'FROM group_invitations gi '
+                   'JOIN users_groups ug ON gi.group_id = ug.id '
+                   'JOIN users u ON gi.inviter_id = u.id '
                    'WHERE gi.invitee_username = %s AND gi.status = "pending"', (session['username'],))
     invitations = cursor.fetchall()
     cursor.close()
@@ -1912,7 +1934,7 @@ def respond_invitation(invitation_id, response):
         return redirect(url_for('login'))
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT * FROM `group_invitations` WHERE id = %s AND invitee_username = %s AND status = "pending"',
+    cursor.execute('SELECT * FROM group_invitations WHERE id = %s AND invitee_username = %s AND status = "pending"',
                    (invitation_id, session['username']))
     invitation = cursor.fetchone()
 
@@ -1921,12 +1943,12 @@ def respond_invitation(invitation_id, response):
         return redirect(url_for('view_invitations'))
 
     if response == 'accept':
-        cursor.execute('UPDATE `group_invitations` SET status = "accepted" WHERE id = %s', (invitation_id,))
-        cursor.execute('INSERT INTO `group_memberships` (group_id, user_id, role) VALUES (%s, %s, %s)',
+        cursor.execute('UPDATE group_invitations SET status = "accepted" WHERE id = %s', (invitation_id,))
+        cursor.execute('INSERT INTO group_memberships (group_id, user_id, role) VALUES (%s, %s, %s)',
                        (invitation['group_id'], session['id'], 'group_user'))
         flash('Invitation accepted.', 'success')
     elif response == 'decline':
-        cursor.execute('UPDATE `group_invitations` SET status = "declined" WHERE id = %s', (invitation_id,))
+        cursor.execute('UPDATE group_invitations SET status = "declined" WHERE id = %s', (invitation_id,))
         flash('Invitation declined.', 'success')
 
     mysql.connection.commit()
@@ -2295,34 +2317,28 @@ def summarize_report(report):
     detections = report['data']['attributes']['results']
     stats = report['data']['attributes']['stats']
 
-    # Check if any engine detected a malicious result
-    malicious_detected = any(result and result['category'] == 'Malicious' for result in detections.values())
+    # Prepare summary
+    summary = f"File Information:\n"
+    summary += f"SHA256: {file_info['sha256']}\n"
+    summary += f"MD5: {file_info['md5']}\n"
+    summary += f"SHA1: {file_info['sha1']}\n"
+    summary += f"File Size: {file_info['size']} bytes\n\n"
 
-    # Prepare summary based on detection results
-    if malicious_detected:
-        summary = f"File Information:\n"
-        summary += f"SHA256: {file_info['sha256']}\n"
-        summary += f"MD5: {file_info['md5']}\n"
-        summary += f"SHA1: {file_info['sha1']}\n"
-        summary += f"File Size: {file_info['size']} bytes\n\n"
+    summary += f"Detection Results:\n"
+    for engine, result in detections.items():
+        if result is not None:
+            summary += f"{engine}: {result['category']} ({result['method']})\n"
+        else:
+            summary += f"{engine}: No result\n"
 
-        summary += f"Detection Results:\n"
-        for engine, result in detections.items():
-            if result is not None:
-                summary += f"{engine}: {result['category']} ({result['method']})\n"
-            else:
-                summary += f"{engine}: No result\n"
-
-        summary += "\nOverall Statistics:\n"
-        summary += f"Malicious: {stats['malicious']}\n"
-        summary += f"Suspicious: {stats['suspicious']}\n"
-        summary += f"Undetected: {stats['undetected']}\n"
-        summary += f"Harmless: {stats['harmless']}\n"
-        summary += f"Timeout: {stats['timeout']}\n"
-        summary += f"Failure: {stats['failure']}\n"
-        summary += f"Type Unsupported: {stats['type-unsupported']}\n"
-    else:
-        summary = "No virus is detected and the file is secure."
+    summary += "\nOverall Statistics:\n"
+    summary += f"Malicious: {stats['malicious']}\n"
+    summary += f"Suspicious: {stats['suspicious']}\n"
+    summary += f"Undetected: {stats['undetected']}\n"
+    summary += f"Harmless: {stats['harmless']}\n"
+    summary += f"Timeout: {stats['timeout']}\n"
+    summary += f"Failure: {stats['failure']}\n"
+    summary += f"Type Unsupported: {stats['type-unsupported']}\n"
 
     return summary
 
@@ -2418,4 +2434,4 @@ def log_action(username, action):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,ssl_context=('flask.crt', 'flask.key'), port=5001)

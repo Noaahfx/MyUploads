@@ -1,5 +1,5 @@
 To Install:
-pip install flask flask_mysqldb werkzeug requests pyotp qrcode twilio oauthlib pillow numpy pandas opencv-python tensorflow gdown mtcnn retina-face tf-keras
+pip install flask flask_mysqldb werkzeug requests pyotp qrcode twilio oauthlib pillow numpy pandas opencv-python tensorflow gdown mtcnn retina-face tf-keras cryptography
 
 Admin:
 Username: Admin

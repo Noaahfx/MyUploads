@@ -54,9 +54,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['TEMP_FOLDER'] = TEMP_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB limit
 
-# FACE_IMAGES_FOLDER = 'static/face_images'
-# app.config['FACE_IMAGES_FOLDER'] = FACE_IMAGES_FOLDER
-# os.makedirs(FACE_IMAGES_FOLDER, exist_ok=True)
+FACE_IMAGES_FOLDER = 'static/face_images'
+app.config['FACE_IMAGES_FOLDER'] = FACE_IMAGES_FOLDER
+os.makedirs(FACE_IMAGES_FOLDER, exist_ok=True)
 
 
 # Ensure the uploads folders exist

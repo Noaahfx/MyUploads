@@ -1,10 +1,11 @@
+----------------------------------------------------------------------------------------------------------------------------------
 To Install:
-pip install flask flask_mysqldb werkzeug requests pyotp qrcode twilio oauthlib pillow numpy pandas opencv-python tensorflow gdown mtcnn retina-face tf-keras cryptography
-
+pip install flask flask_mysqldb werkzeug requests pyotp qrcode twilio oauthlib pillow numpy pandas opencv-python tensorflow gdown mtcnn retina-face tf-keras cryptography torch
+----------------------------------------------------------------------------------------------------------------------------------
 Admin:
 Username: Admin
 Password: Pa$$w0rd
-
+----------------------------------------------------------------------------------------------------------------------------------
 Https Steps:
 Open PowerShell in Admin Mode:
 
@@ -19,7 +20,7 @@ mkcert localhost
 cd "C:\Users\soodi\OneDrive\Desktop\Noah\School\NYP\Sem 3\SECPRJ\Project(Combined)" {Ur Prj Path}
 
 mkcert localhost 127.0.0.1
-
+----------------------------------------------------------------------------------------------------------------------------------
 Database Script:
 -- Create the database if it doesn't exist
 CREATE DATABASE IF NOT EXISTS `secprj` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -133,3 +134,4 @@ CREATE TABLE IF NOT EXISTS `previous_passwords` (
 
 INSERT INTO users (username, email, password, role, email_verified, mfa_enabled, mfa_method, mfa_secret, phone_number, phone_verified, email_2fa_code, email_2fa_expiration)
 VALUES ('admin', 'admin@example.com', 'scrypt:32768:8:1$cnxjLQWgYdvDkmb8$1bd9db2ebf587e0cf6bb99acb297a6cb3a20ec8caf2980af55b832f13c2ad619dfa84e184c10e996688a35afd753ad7c86144aa1ef81ef8e83bc26c401e06268', 'admin', TRUE, FALSE, NULL, NULL, NULL, FALSE, NULL, NULL);
+----------------------------------------------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
-//    const sessionTimeout = 1 * 60; // 30 minutes in seconds
-//    const warningTime = 0.5 * 60; // Show warning 5 minutes before timeout
+    const sessionTimeout = 1 * 60; // 30 minutes in seconds
+    const warningTime = 0.5 * 60; // Show warning 5 minutes before timeout
 
     let sessionWarningTimer;
     let sessionExpireTimer;

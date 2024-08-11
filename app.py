@@ -2316,28 +2316,34 @@ def summarize_report(report):
     detections = report['data']['attributes']['results']
     stats = report['data']['attributes']['stats']
 
-    # Prepare summary
-    summary = f"File Information:\n"
-    summary += f"SHA256: {file_info['sha256']}\n"
-    summary += f"MD5: {file_info['md5']}\n"
-    summary += f"SHA1: {file_info['sha1']}\n"
-    summary += f"File Size: {file_info['size']} bytes\n\n"
+    # Check if any engine detected a malicious result
+    malicious_detected = any(result and result['category'] == 'Malicious' for result in detections.values())
 
-    summary += f"Detection Results:\n"
-    for engine, result in detections.items():
-        if result is not None:
-            summary += f"{engine}: {result['category']} ({result['method']})\n"
-        else:
-            summary += f"{engine}: No result\n"
+    # Prepare summary based on detection results
+    if malicious_detected:
+        summary = f"File Information:\n"
+        summary += f"SHA256: {file_info['sha256']}\n"
+        summary += f"MD5: {file_info['md5']}\n"
+        summary += f"SHA1: {file_info['sha1']}\n"
+        summary += f"File Size: {file_info['size']} bytes\n\n"
 
-    summary += "\nOverall Statistics:\n"
-    summary += f"Malicious: {stats['malicious']}\n"
-    summary += f"Suspicious: {stats['suspicious']}\n"
-    summary += f"Undetected: {stats['undetected']}\n"
-    summary += f"Harmless: {stats['harmless']}\n"
-    summary += f"Timeout: {stats['timeout']}\n"
-    summary += f"Failure: {stats['failure']}\n"
-    summary += f"Type Unsupported: {stats['type-unsupported']}\n"
+        summary += f"Detection Results:\n"
+        for engine, result in detections.items():
+            if result is not None:
+                summary += f"{engine}: {result['category']} ({result['method']})\n"
+            else:
+                summary += f"{engine}: No result\n"
+
+        summary += "\nOverall Statistics:\n"
+        summary += f"Malicious: {stats['malicious']}\n"
+        summary += f"Suspicious: {stats['suspicious']}\n"
+        summary += f"Undetected: {stats['undetected']}\n"
+        summary += f"Harmless: {stats['harmless']}\n"
+        summary += f"Timeout: {stats['timeout']}\n"
+        summary += f"Failure: {stats['failure']}\n"
+        summary += f"Type Unsupported: {stats['type-unsupported']}\n"
+    else:
+        summary = "No virus is detected and the file is secure."
 
     return summary
 

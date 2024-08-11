@@ -976,33 +976,45 @@ def change_password():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SELECT password FROM users WHERE id = %s', (session['id'],))
     account = cursor.fetchone()
+
+    # Check if the current password is correct
     if account and check_password_hash(account['password'], current_password):
         print("ok can")
     else:
         flash('Incorrect current password. Please try again.')
         return redirect(url_for('account'))
 
+    # Check if the new passwords match
     if new_password != confirm_new_password:
         flash('New passwords do not match. Please try again.')
         return redirect(url_for('account'))
 
-    if len(new_password) < 8 or not re.search(r"[A-Za-z]", new_password) or not re.search(r"[0-9]", new_password) or not re.search(r"[!@#$%^&*]", new_password):
+    # Check if the new password meets the criteria
+    if len(new_password) < 8 or not re.search(r"[A-Za-z]", new_password) or not re.search(r"[0-9]",
+                                                                                          new_password) or not re.search(
+            r"[!@#$%^&*]", new_password):
         flash('New password must be at least 8 characters long, contain letters, numbers, and special characters.')
         return redirect(url_for('account'))
 
+    # Retrieve previous passwords from the database
     cursor.execute('SELECT password_hash FROM previous_passwords WHERE user_id = %s', (session['id'],))
     previous_passwords = cursor.fetchall()
 
+    # Check if the new password is the same as any previous passwords
     for previous_password in previous_passwords:
-        if previous_password['password_hash'] == new_password:
+        if check_password_hash(previous_password['password_hash'], new_password):
             flash(
                 'New password cannot be the same as any of the previous passwords. Please choose a different password.')
             return redirect(url_for('account'))
 
+    # Hash the new password and update the user's password
     hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
-    cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)',(session['id'], account['password']))
+    cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)',
+                   (session['id'], account['password']))
     cursor.execute('UPDATE users SET password = %s WHERE id = %s', (hashed_password, session['id']))
     mysql.connection.commit()
+
+    # Clear the session and prompt the user to log in again
     session.clear()
     flash('Password changed successfully. Please log in with your new password.')
     log_action(session.get('username', 'Unknown'), 'Password changed')
@@ -1011,7 +1023,6 @@ def change_password():
 @app.route('/password_change_success')
 def password_change_success():
     return render_template('password_change_success.html')
-
 
 @app.route('/mfa_disabled_success')
 def mfa_disabled_success():
@@ -1252,20 +1263,8 @@ def reset_password():
             flash('New password must be at least 8 characters long, contain letters, numbers, and special characters.')
             return redirect(url_for('reset_password'))
 
-        cursor.execute('SELECT password_hash FROM previous_passwords WHERE user_id = %s', (session['id'],))
-        previous_passwords = cursor.fetchall()
-
-        for previous_password in previous_passwords:
-            if check_password_hash(previous_password['password_hash'], new_password):
-                flash(
-                    'New password cannot be the same as any of the previous passwords. Please choose a different password.')
-                return redirect(url_for('reset_password'))
-
         hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
         cursor.execute('UPDATE users SET password = %s WHERE username = %s', (hashed_password, username))
-        mysql.connection.commit()
-
-        cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)', (session['id'], hashed_password))
         mysql.connection.commit()
 
         flash('Password changed successfully.')

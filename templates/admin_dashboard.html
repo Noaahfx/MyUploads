@@ -53,7 +53,7 @@
             <tr>
                 <th>ID</th>
                 <th>Filename</th>
-                <th>Path</th>
+
                 <th>User ID</th>
                 <th>Action</th>
             </tr>
@@ -63,7 +63,7 @@
             <tr>
                 <td>{{ file.id }}</td>
                 <td>{{ file.filename }}</td>
-                <td>{{ file.filepath }}</td>
+
                 <td>{{ file.user_id }}</td>
                 <td>
                     <form method="POST" action="{{ url_for('confirm_delete_file') }}">

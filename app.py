@@ -1255,15 +1255,30 @@ def reset_password():
         new_password = request.form['new_password']
         confirm_password = request.form['confirm_password']
 
+        # Check if the new passwords match
         if new_password != confirm_password:
             flash('Passwords do not match.')
             return redirect(url_for('reset_password'))
 
+        # Check if the new password meets the criteria
         if len(new_password) < 8 or not re.search(r"[A-Za-z]", new_password) or not re.search(r"[0-9]", new_password) or not re.search(r"[!@#$%^&*]", new_password):
             flash('New password must be at least 8 characters long, contain letters, numbers, and special characters.')
             return redirect(url_for('reset_password'))
 
+        # Retrieve previous passwords from the database
+        cursor.execute('SELECT password_hash FROM previous_passwords WHERE user_id = %s', (session['id'],))
+        previous_passwords = cursor.fetchall()
+
+        # Check if the new password is the same as any previous passwords
+        for previous_password in previous_passwords:
+            if check_password_hash(previous_password['password_hash'], new_password):
+                flash('New password cannot be the same as any of the previous passwords. Please choose a different password.')
+                return redirect(url_for('reset_password'))
+
+        # Hash the new password and update the user's password
         hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
+        cursor.execute('INSERT INTO previous_passwords (user_id, password_hash) VALUES (%s, %s)',
+                       (session['id'], hashed_password))
         cursor.execute('UPDATE users SET password = %s WHERE username = %s', (hashed_password, username))
         mysql.connection.commit()
 
@@ -1715,9 +1730,15 @@ def delete_user():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     try:
-        # Fetch the user's face image file path
-        cursor.execute('SELECT face_image FROM users WHERE id = %s', (user_id,))
+        # Fetch the username and face image file path
+        cursor.execute('SELECT username, face_image FROM users WHERE id = %s', (user_id,))
         user = cursor.fetchone()
+
+        # Prevent deletion of the 'admin' user
+        if user and user['username'] == 'admin':
+            flash('The admin user cannot be deleted.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+
         if user and user['face_image']:
             face_image_path = user['face_image']
             if os.path.exists(face_image_path):
